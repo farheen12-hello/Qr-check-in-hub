@@ -1,0 +1,72 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>QR Check-In Hub | Dashboard</title>
+    <style>
+        body {
+            font-family: 'Poppins', sans-serif;
+            margin: 0;
+            padding: 0;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            height: 100vh;
+            background: #3d3d3d;
+        }
+
+        .dashboard {
+            width: 80%;
+            padding: 20px;
+            background: rgba(36, 34, 24, 0.807);
+            box-shadow: 0 4px 10px rgba(118, 59, 59, 0.2);
+            border-radius: 10px;
+        }
+
+        .dashboard h1 {
+            text-align: center;
+            color: #f9ef25;
+        }
+
+        .modes {
+            display: flex;
+            justify-content: space-around;
+            margin-top: 20px;
+        }
+
+        .mode {
+            width: 45%;
+            padding: 20px;
+            border: 1px solid #ccc;
+            border-radius: 10px;
+            background: #fafafa;
+            text-align: center;
+            cursor: pointer;
+            transition: 0.3s;
+        }
+
+        .mode:hover {
+            background: #6d6a6a;
+        }
+    </style>
+</head>
+<body>
+
+    <div class="dashboard">
+        <h1>Welcome to QR Check-In Hub</h1>
+        <div class="modes">
+            <div class="mode" onclick="location.href='classroom.html'">
+                <h2>Classroom Mode</h2>
+                <p>Manage student attendance via QR codes.</p>
+            </div>
+            <div class="mode" onclick="location.href='qr_code.html'">
+                <h2>Event Mode</h2>
+                <p>Track event check-ins and participation.</p>
+            </div>            
+            </div>
+        </div>
+    </div>
+
+</body>
+</html>

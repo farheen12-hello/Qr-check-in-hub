@@ -1,0 +1,128 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Event Check-In QR Code</title>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/qrious/4.0.2/qrious.min.js"></script>
+    <style>
+        body {
+            font-family: 'Poppins', sans-serif;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            height: 100vh;
+            margin: 0;
+            background: #f4f4f9;
+            text-align: center;
+            transition: background 0.5s ease;
+        }
+        h1 {
+            color: #333;
+        }
+        canvas {
+            margin-top: 20px;
+            padding: 10px;
+            background: white;
+            border-radius: 10px;
+            box-shadow: 0 4px 10px rgba(0, 0, 0, 0.2);
+        }
+        #form-link {
+            display: inline-block;
+            margin-top: 15px;
+            text-decoration: none;
+            color: white;
+            background: #007bff;
+            padding: 10px 15px;
+            border-radius: 5px;
+            transition: background 0.3s;
+        }
+        #form-link:hover {
+            background: #0056b3;
+        }
+        .timer {
+            margin-top: 10px;
+            font-size: 14px;
+            color: #555;
+        }
+        /* Dark Mode */
+        .dark-mode {
+            background: #222;
+            color: #ddd;
+        }
+        .dark-mode h1 {
+            color: #f4f4f9;
+        }
+        .dark-mode canvas {
+            background: #333;
+            box-shadow: 0 4px 10px rgba(255, 255, 255, 0.2);
+        }
+        .dark-mode #form-link {
+            background: #28a745;
+        }
+        .dark-mode #form-link:hover {
+            background: #218838;
+        }
+        .toggle-btn {
+            position: absolute;
+            top: 20px;
+            right: 20px;
+            background: #555;
+            color: white;
+            border: none;
+            padding: 8px 12px;
+            cursor: pointer;
+            border-radius: 5px;
+            transition: background 0.3s;
+        }
+        .toggle-btn:hover {
+            background: #333;
+        }
+    </style>
+</head>
+<body>
+
+    <button class="toggle-btn" onclick="toggleDarkMode()">🌙 Dark Mode</button>
+
+    <h1>Scan QR Code to Check In</h1>
+    <canvas id="qr-code"></canvas>
+    
+    <p class="timer">Redirecting in <span id="countdown">10</span> seconds...</p>
+
+    <a id="form-link" href="" target="_blank">Click here if QR is not loading</a>
+
+    <script>
+        // Your Google Form link
+        const googleFormLink = "https://forms.gle/puxHURorJq8rdpgu9";
+
+        // Generate QR code
+        var qr = new QRious({
+            element: document.getElementById("qr-code"),
+            value: googleFormLink,
+            size: 200
+        });
+
+        // Update link
+        document.getElementById("form-link").href = googleFormLink;
+
+        // Countdown Timer for Auto-Redirect
+        let countdown = 100;
+        const countdownElement = document.getElementById("countdown");
+        const timer = setInterval(() => {
+            countdown--;
+            countdownElement.textContent = countdown;
+            if (countdown === 0) {
+                clearInterval(timer);
+                window.location.href = googleFormLink;
+            }
+        }, 1000);
+
+        // Dark Mode Toggle
+        function toggleDarkMode() {
+            document.body.classList.toggle("dark-mode");
+        }
+    </script>
+
+</body>
+</html>

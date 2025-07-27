@@ -1,0 +1,293 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>QR Code Scanner</title>
+    <script src="https://unpkg.com/html5-qrcode"></script>
+    <style>
+        /* General Styles */
+        body {
+            font-family: 'Arial', sans-serif;
+            background: linear-gradient(135deg, #000000, #243146);
+            margin: 0;
+            padding: 0;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            height: 100vh;
+            overflow: hidden;
+        }
+
+        .container {
+            background: rgb(0, 0, 0);
+            border-radius: 15px;
+            box-shadow: 0 10px 30px rgba(125, 122, 122, 0.1);
+            padding: 30px;
+            width: 90%;
+            max-width: 500px;
+            text-align: center;
+        }
+
+        h1 {
+            font-size: 24px;
+            color: #000000;
+            margin-bottom: 20px;
+        }
+
+        /* Camera Selector */
+        #cameraSelect {
+            width: 100%;
+            padding: 10px;
+            border: 1px solid #ddd;
+            border-radius: 8px;
+            margin-bottom: 20px;
+            font-size: 16px;
+            background: #f9f9f9;
+            color: #333;
+        }
+
+        /* Buttons */
+        button {
+            background: #aeada7;
+            color: rgb(0, 0, 0);
+            border: none;
+            padding: 12px 24px;
+            border-radius: 7px;
+            font-size: 19px;
+            cursor: pointer;
+            transition: background 0.3s ease;
+            margin: 10px 5px;
+        }
+
+        button:hover {
+            background: #d39103;
+        }
+
+        button:active {
+            transform: scale(0.95);
+        }
+
+        /* Scanner Box */
+        #reader {
+            width: 100%;
+            height: 300px;
+            margin: 20px auto;
+            position: relative;
+            border: 2px dashed #bfa900;
+            border-radius: 15px;
+            overflow: hidden;
+            background: #000000;
+        }
+
+        #scanner-line {
+            position: absolute;
+            width: 100%;
+            height: 3px;
+            background: #c50303;
+            top: 0;
+            animation: scan 2s infinite linear;
+        }
+
+        @keyframes scan {
+            0% { transform: translateY(0); }
+            100% { transform: translateY(100%); }
+        }
+
+        /* Result Message */
+        #result {
+            margin-top: 20px;
+            font-size: 18px;
+            font-weight: bold;
+            padding: 10px;
+            border-radius: 8px;
+            background: #e8f0fe;
+            color: #c80c0c;
+        }
+
+        .success {
+            background: #d4edda;
+            color: #155724;
+        }
+
+        .error {
+            background: #f8d7da;
+            color: #721c24;
+        }
+
+        /* Loading Spinner */
+        .loading {
+            border: 4px solid #f3f3f3;
+            border-top: 4px solid #007bff;
+            border-radius: 50%;
+            width: 30px;
+            height: 30px;
+            animation: spin 5s linear infinite;
+            margin: 100px auto;
+        }
+
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+
+        .hidden {
+            display: none;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>Scan Student QR Code</h1>
+        <select id="cameraSelect"></select>
+        <button onclick="startScanner()">Start Scanner</button>
+        <div id="reader">
+            <div id="scanner-line"></div>
+        </div>
+        <p id="result">Scan a QR Code</p>
+        <div id="loading" class="loading hidden"></div>
+        <button onclick="stopScanner()">Stop Scanner</button>
+    </div>
+
+    <script>
+        const scanner = new Html5Qrcode("reader");
+        let isScanning = false;
+
+        // Load available cameras
+        async function loadCameras() {
+            try {
+                const devices = await navigator.mediaDevices.enumerateDevices();
+                const cameras = devices.filter(device => device.kind === "videoinput");
+                if (cameras.length > 0) {
+                    const select = document.getElementById("cameraSelect");
+                    cameras.forEach((camera, index) => {
+                        const option = document.createElement("option");
+                        option.value = camera.deviceId;
+                        option.text = `Camera ${index + 1}`;
+                        select.appendChild(option);
+                    });
+                } else {
+                    showError("No cameras found.");
+                }
+            } catch (error) {
+                showError("Error loading cameras: " + error.message);
+            }
+        }
+
+        // Start the scanner
+        async function startScanner() {
+            if (isScanning) return;
+
+            const cameraId = document.getElementById("cameraSelect").value;
+            if (!cameraId) {
+                showError("Please select a camera.");
+                return;
+            }
+
+            try {
+                showLoading();
+                await scanner.start(cameraId, { fps: 10, qrbox: { width: 250, height: 250 } },
+                    (decodedText) => {
+                        handleScanSuccess(decodedText);
+                    },
+                    (errorMessage) => {
+                        console.warn("QR Scan Error:", errorMessage);
+                    }
+                );
+                isScanning = true;
+            } catch (error) {
+                showError("Failed to start scanner: " + error.message);
+            } finally {
+                hideLoading();
+            }
+        }
+
+        // Stop the scanner
+        async function stopScanner() {
+            if (!isScanning) return;
+
+            try {
+                await scanner.stop();
+                isScanning = false;
+                console.log("Scanner stopped");
+            } catch (error) {
+                showError("Failed to stop scanner: " + error.message);
+            }
+        }
+
+        // Handle successful scan
+        function handleScanSuccess(decodedText) {
+            try {
+                // Validate QR code format
+                const [rollNumber, studentName, studentID] = decodedText.split(",");
+                if (!rollNumber || !studentName || !studentID) {
+                    throw new Error("Invalid QR code format.");
+                }
+
+                // Display success message
+                showResult("✅ Attendance Marked Successfully!", "success");
+
+                // Submit to Google Form
+                submitToGoogleForm(rollNumber, studentName, studentID);
+
+                // Stop scanner after successful scan
+                stopScanner();
+            } catch (error) {
+                showError("Error processing QR code: " + error.message);
+            }
+        }
+
+        // Submit data to Google Form
+        async function submitToGoogleForm(rollNumber, studentName, studentID) {
+            const googleFormURL = "https://docs.google.com/forms/d/e/1FAIpQLSd7vmCc9aT5nnXIqWytzvknSVttqBKA341gvgyH-SAMdAWz-Q/formResponse";
+            const formData = new FormData();
+            formData.append("entry.22217557", rollNumber);   // Roll Number
+            formData.append("entry.306954031", studentName); // Student Name
+            formData.append("entry.208939566", studentID);   // Student ID
+
+            try {
+                await fetch(googleFormURL, { method: "POST", body: formData });
+                console.log("Attendance Submitted");
+            } catch (error) {
+                console.error("Error submitting:", error);
+                // Save data locally if submission fails
+                saveDataLocally(rollNumber, studentName, studentID);
+            }
+        }
+
+        // Save data locally (offline support)
+        function saveDataLocally(rollNumber, studentName, studentID) {
+            const data = { rollNumber, studentName, studentID, timestamp: new Date().toISOString() };
+            const offlineData = JSON.parse(localStorage.getItem("offlineData") || "[]");
+            offlineData.push(data);
+            localStorage.setItem("offlineData", JSON.stringify(offlineData));
+            showResult("⚠️ Network issue. Data saved locally.", "error");
+        }
+
+        // Show loading spinner
+        function showLoading() {
+            document.getElementById("loading").classList.remove("hidden");
+        }
+
+        // Hide loading spinner
+        function hideLoading() {
+            document.getElementById("loading").classList.add("hidden");
+        }
+
+        // Show result message
+        function showResult(message, className) {
+            const resultElement = document.getElementById("result");
+            resultElement.innerText = message;
+            resultElement.className = className;
+        }
+
+        // Show error message
+        function showError(message) {
+            showResult("❌ " + message, "error");
+        }
+
+        // Initialize the app
+        loadCameras();
+    </script>
+</body>
+</html>
